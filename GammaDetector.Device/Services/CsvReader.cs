@@ -1,6 +1,5 @@
 using System.Globalization;
 using CsvHelper;
-using CsvHelper.Configuration;
 using GammaDetector.Dtos;
 
 namespace GammaDetector.Device.Services;
@@ -10,6 +9,7 @@ public sealed class CsvReader
     private const string TimestampColumn = "Timestamp";
     private const string DetectionsColumn = "Detections";
     private const string CsvFileName = "readings.csv";
+    private const string TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff";
 
     private readonly object _gate = new();
     private readonly string _path;
@@ -41,7 +41,7 @@ public sealed class CsvReader
         {
             using var writer = new StreamWriter(_path, append: true);
             using var csv = CreateWriter(writer);
-            csv.WriteField(reading.Timestamp);
+            csv.WriteField(reading.Timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture));
             csv.WriteField(reading.Detections);
             csv.NextRecord();
         }
@@ -65,7 +65,11 @@ public sealed class CsvReader
             var readings = new List<GammaReadingDto>();
             while (csv.Read())
             {
-                var timestamp = csv.GetField<DateTimeOffset>(TimestampColumn);
+                var timestamp = DateTimeOffset.ParseExact(
+                    csv.GetField(TimestampColumn)!,
+                    TimestampFormat,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
                 var detections = csv.GetField<int>(DetectionsColumn);
                 readings.Add(new GammaReadingDto(detections, timestamp));
             }
@@ -91,23 +95,9 @@ public sealed class CsvReader
         csv.NextRecord();
     }
 
-    private static CsvWriter CreateWriter(TextWriter writer)
-    {
-        var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        ApplyDateTimeFormat(csv.Context);
-        return csv;
-    }
+    private static CsvWriter CreateWriter(TextWriter writer) =>
+        new(writer, CultureInfo.InvariantCulture);
 
-    private static CsvHelper.CsvReader CreateReader(TextReader reader)
-    {
-        var csv = new CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
-        ApplyDateTimeFormat(csv.Context);
-        return csv;
-    }
-
-    private static void ApplyDateTimeFormat(CsvContext context)
-    {
-        context.TypeConverterOptionsCache.GetOptions<DateTimeOffset>().Formats =
-            new[] { "o" };
-    }
+    private static CsvHelper.CsvReader CreateReader(TextReader reader) =>
+        new(reader, CultureInfo.InvariantCulture);
 }

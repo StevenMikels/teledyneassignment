@@ -1,3 +1,3 @@
 namespace GammaDetector.Dtos;
 
-public record ReadingTimestampsDto(DateTimeOffset MostRecent, DateTimeOffset LeastRecent);
+public record ReadingTimestampsDto(string MostRecent, string LeastRecent);

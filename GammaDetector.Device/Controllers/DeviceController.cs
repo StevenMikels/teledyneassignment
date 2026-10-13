@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using GammaDetector.Device.Services;
 using GammaDetector.Dtos;
@@ -12,6 +13,7 @@ namespace GammaDetector.Device.Controllers;
 public class DeviceController : ControllerBase
 {
     private const string NoStoredReadings = "No stored readings.";
+    private const string TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff";
 
     private readonly CsvReader _store;
 
@@ -67,7 +69,7 @@ public class DeviceController : ControllerBase
             return Ok(NoStoredReadings);
         }
 
-        return Ok(ToResponse(readings.MinBy(r => r.Detections)!));
+        return Ok($"{readings.Min(r => r.Detections)} CPS");
     }
 
     /// <summary>
@@ -82,7 +84,7 @@ public class DeviceController : ControllerBase
             return Ok(NoStoredReadings);
         }
 
-        return Ok(ToResponse(readings.MaxBy(r => r.Detections)!));
+        return Ok($"{readings.Max(r => r.Detections)} CPS");
     }
 
     /// <summary>
@@ -119,13 +121,15 @@ public class DeviceController : ControllerBase
 
         var mostRecent = readings.Max(r => r.Timestamp);
         var leastRecent = readings.Min(r => r.Timestamp);
-        return Ok(new ReadingTimestampsDto(mostRecent, leastRecent));
+        return Ok(new ReadingTimestampsDto(
+            mostRecent.ToString(TimestampFormat, CultureInfo.InvariantCulture),
+            leastRecent.ToString(TimestampFormat, CultureInfo.InvariantCulture)));
     }
 
     private static object ToResponse(GammaReadingDto reading) =>
         new
         {
             detections = $"{reading.Detections} CPS",
-            timestamp = reading.Timestamp
+            timestamp = reading.Timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)
         };
 }
