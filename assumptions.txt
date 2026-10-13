@@ -1,0 +1,28 @@
+I have chosen to model the detector and device displaying the information as
+two seperate instances. One instance, the detector, creates readings and sends
+them to the second instance, the device, which stores them and display the
+requested information. I am aware that obviously you would not use a web request
+to send detection information to this the proposed device, but it is a convenient
+way to model the interaction for the purposes of this exercise.
+
+I have chosen not to clear stored data when starting/stopping detections. This
+is something that seems like it might be reasonable functionality for the device,
+but decided against it.
+
+I just randomly decided 1 to 50 to be what the detector should read in CPS, and
+also did not try to realistically guess what it would read. Obviously in real
+life it is likely CPS would not be wildly fluctuating back and forth if it
+was measuring the same thing, but I did not consider this nor realistic CPS
+numbers to be something important to model in this exercise.
+
+I didn't have much insight into how a device like this might store its reading.
+After some research it seems lightweight SQL instances or a simple file like CSV
+were common. I didn't want to deal with installing one of these sort of instances
+and making a build process for it, so I chose to model this with a CSV.
+
+I have assumed we are not going to be storing huge amounts such as thousands
+of readings at once. If this was a consideration, I would take considerations for
+speed such as storing the total and min/max CPS readings in a seperate CSV so we
+do not need to waste time and memory reading through the CSV for
+these values.
+
